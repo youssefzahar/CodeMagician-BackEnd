@@ -1,26 +1,37 @@
-const mongoose = require('mongoose')
-const { monitorEventLoopDelay } = require('perf_hooks')
-const Schema = mongoose.Schema
+import mongoose from "mongoose";
+const { Schema, model} = mongoose;
 
-const userSchema = new Schema({
-    first_name: {
-        type: String,
+const userSchema = new Schema(
+    {
+        firstname: {
+            type: String,
+        },
+        lastname: {
+            type: String,
+        },
+        email: {
+            type: String,
+            unique: true
+        },
+        username: {
+            type: String,
+            unique: true
+        },
+        password: {
+            type: String,
+        },
+        otp: {
+            type: String,
+            required: false,
+          },
+        isVerified:{
+            type: Boolean,
+        }
     },
-    last_name: {
-        type: String,
-    },
-    email: {
-        type: String,
-        unique: true
-    },
-    user_name: {
-        type: String,
-        unique: true
-    },
-    password: {
-        type: String,
+     
+    {
+        timestamps: true
     }
-}, {timestamps: true} )
+)
 
-const User = mongoose.model('User', userSchema)
-module.exports = User
+export default model('User',userSchema);

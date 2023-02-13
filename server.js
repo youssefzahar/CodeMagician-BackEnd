@@ -1,32 +1,45 @@
-const express = require('express')
-const mongoose = require('mongoose')
-const morgan = require('morgan')
-const bodyparser = require('body-parser')
-//import UserController from 'Con'
+import express, { json } from 'express';
+import mongoose from 'mongoose';
+import morgan from 'morgan';
+import cors from 'cors';
+import { errorHandler, notFoundError } from './Middlewares/error-handler.js';
+
+// Routes import
+import userRoute from './Routes/User.js';
 
 
+const app = express();
+const port = process.env.PORT || 9090;
 
-mongoose.connect('mongodb://localhost:27017/COdeMagician', {useNewUrlParser: true, useUnifiedTopology: true})
+const databaseName = 'COdeMagician';
 
-const db = mongoose.connection
+mongoose.set('debug', true);
+mongoose.Promise = global.Promise;
 
-db.on('error',(err) => {
-    console.log(err)
-})
+// Database connection
+mongoose
+  .connect(`mongodb://127.0.0.1:27017/${databaseName}`)
+  .then(() => {
+    console.log(`Connected to ${databaseName}`);
+  })
+  .catch(err => {
+    console.log(err);
+  });
 
-db.once('open', () => {
-    console.log('Database connection established')
-})
+app.use(cors());
+app.use(morgan("dev"));
+app.use(express.json());
+app.use(express.urlencoded({extended: true}));
 
-const app = express()
+app.use(notFoundError);
+app.use(errorHandler);
 
-app.use(morgan('dev'))
-app.use(bodyparser.urlencoded({extended: true}))
-app.use(bodyparser.json())
-const Port = process.env.Port || 3000
+// Add routes
+app.use('/user',userRoute);
 
-app.listen(Port, () =>{
-  console.log(`Server is running on port ${Port}`)
+// Server connection 
+app.listen(port, () =>{
+  console.log(`Server is running on port ${port}`)
 })
 
 

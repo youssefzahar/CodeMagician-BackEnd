@@ -1,6 +1,29 @@
-const User = require('../Models/User')
+import User from "../Models/User.js";
+import bcrypt from "bcryptjs";
+import jwt from "jsonwebtoken";
 
 
+export async function signin (req,res) {
+    const {email,password} =  req.body;
+    const user = await User.findOne({"email": email});
+    if(!user){
+        return res.status(403).json({error: "user not found"});
+    }
+    const passwordCompare = await bcrypt.compare(password,user.password);
+    if(!passwordCompare){
+        return res.status(403).json({error : "password failed"})
+    }
+    if(!user.isVerified){
+        return res.status(401).json({error : "UnAuthorized",email:user.email}) 
+    }
+    const payload = {id:user.id};
+    const token = jwt.sign(payload,process.env.JWT_SECRET, {
+        expiresIn: 60 * 60 * 24,
+    });
+    res.status(200).json({success: true , token: token});
+}
+
+/*
 const index = (req,res,next) => {
     User.find()
     .then(response => {
@@ -75,3 +98,4 @@ const destroy = (req, res, next) => {
 module.exports = {
     index,show,add,destroy
 }
+*/
