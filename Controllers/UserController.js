@@ -1,11 +1,14 @@
-import User from "../Models/User.js";
+import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
+import sendMail from "../middlewares/nodemail.js";
+import verifyAccounttemplate from "../templates/verifyAccount.js";
+import forgotpasswordtemplate from "../templates/forgotPassword.js";
 
 
 export async function signin (req,res) {
-    const {email,password} =  req.body;
-    const user = await User.findOne({"email": email});
+    const {username,password} =  req.body;
+    const user = await User.findOne({"username": username});
     if(!user){
         return res.status(403).json({error: "user not found"});
     }
@@ -14,7 +17,7 @@ export async function signin (req,res) {
         return res.status(403).json({error : "password failed"})
     }
     if(!user.isVerified){
-        return res.status(401).json({error : "UnAuthorized",email:user.email}) 
+        return res.status(401).json({error : "UnAuthorized",username:user.username}) 
     }
     const payload = {id:user.id};
     const token = jwt.sign(payload,process.env.JWT_SECRET, {
@@ -23,65 +26,70 @@ export async function signin (req,res) {
     res.status(200).json({success: true , token: token});
 }
 
-/*
-const index = (req,res,next) => {
-    User.find()
-    .then(response => {
-        res.json({
-            response
-        })
+
+export async function getuser(req, res) {
+  User.findById(req.params.id)
+    .then((doc) => {
+      res.status(200).json(doc);
     })
-    .catch(error => {
-        res.json({
-            message: 'An error occured'
-        })
-    })
+    .catch((err) => {
+      res.status(500).json({ error: err });
+    });
+}
+
+export async function signup(req , res){
+  try {
+      var { username , password, firstname , lastname, email } = req.body;
+      var exists = await User.findOne({email});
+      if (exists) {
+        return res.status(409).send("user already created");
+      }       
+     var  encryptedPassword = await bcrypt.hash(password, 10);
+  
+      var user = await User.create({
+       username,
+       password: encryptedPassword,
+       firstname,
+       lastname,
+       email,
+      });
+     console.log(username)
+      var link = "rz"
+      var template = await verifyAccounttemplate(username,link);
+     await sendMail(email,"Welcome to CodeMagician",template);
+    } catch (err) {
+      console.log(err);
+    }
+  }
+
+
+
+  
+export async function updateUser(req, res) {
+  let newUser = {};
+  var { password, email } = req.body;
+  var  hashed = await bcrypt.hash(password, 10);
+    newUser = {
+      email,
+      password: hashed,
+    }
+  
+  User.findByIdAndUpdate(req.params.id, newUser)
+  .then(() => {
+      res.json({
+          message: 'user updated'
+      })
+  })
+  .catch(error => {
+      res.json({
+          message: 'error'
+      })
+  })
 }
 
 
-
-const show = (req, res, next) =>{
-    let userID = req.body.userID
-    console.log(userID)
-    User.findById(userID)
-    .then(response => {
-        res.json({
-            response
-        })
-    })
-    .catch(error => {
-        res.json({
-            mesaage: 'An error occured'
-        })
-    })
-}
-
-
-const add = (req, res, next) => {
-        let user = new User({
-            user_name: req.body.user_name,
-            email: req.body.email,
-            password: req.body.password,
-        })
-    
-        user.save()
-        .then(response => {
-            res.json({
-                message: 'user added'
-            })
-        })
-        .catch(error => {
-            res.json({
-                message: 'error'
-            })
-        })
-}
-
-
-
-const destroy = (req, res, next) => {
-    let userID = req.body.userID
-    User.findByIdAndDelete(userID)
+export async function deleteUser (req,res){
+    User.findByIdAndRemove(req.params.id)
     .then(() => {
         res.json({
             message: 'user deleted'
@@ -93,9 +101,3 @@ const destroy = (req, res, next) => {
         })
     })
 }
-
-
-module.exports = {
-    index,show,add,destroy
-}
-*/

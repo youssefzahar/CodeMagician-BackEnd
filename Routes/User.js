@@ -1,23 +1,31 @@
 import express from 'express';
-import { signin } from '../Controllers/UserController';
+import { body } from "express-validator";
+
+import { signin, getuser, signup, updateUser, deleteUser } from "../controllers/UserController.js";
 
 
 const router = express.Router()
 
 router
-.route("/login")
+.route("/signin")
 .post(signin)
+
+router
+  .route("/profile/:id")
+  .get(getuser)
+
+router
+  .route("/signup")
+  .post(signup)
+
+router
+ .route("/update/:id")
+ .put(updateUser);
+
+router
+  .route("/delete/:id")
+  .delete(deleteUser);
+
 
 
 export default router;
-
-/*
-router.get('/' , UserController.index)
-router.get('/show',  UserController.show)
-router.post('/add',  UserController.add)
-router.delete('/delete',UserController.destroy)
-
-
-module.exports = router
-*/
-
