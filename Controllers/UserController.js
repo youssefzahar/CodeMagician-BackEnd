@@ -53,12 +53,12 @@ export async function signup(req , res){
        lastname,
        email,
       });
-     console.log(username)
-      var link = "rz"
-      var template = await verifyAccounttemplate(username,link);
-     await sendMail(email,"Welcome to CodeMagician",template);
+    // var link = "rz"
+    // var template = await verifyAccounttemplate(username,link);
+    // await sendMail(email,"Welcome to CodeMagician",template);
+     res.status(200).json("user added");
     } catch (err) {
-      console.log(err);
+      res.status(500).json({ error: err });
     }
   }
 
@@ -76,14 +76,10 @@ export async function updateUser(req, res) {
   
   User.findByIdAndUpdate(req.params.id, newUser)
   .then(() => {
-      res.json({
-          message: 'user updated'
-      })
+    res.status(200).json("user updated");
   })
-  .catch(error => {
-      res.json({
-          message: 'error'
-      })
+  .catch(err => {
+    res.status(500).json({ error: err })
   })
 }
 
@@ -91,13 +87,10 @@ export async function updateUser(req, res) {
 export async function deleteUser (req,res){
     User.findByIdAndRemove(req.params.id)
     .then(() => {
-        res.json({
-            message: 'user deleted'
-        })
+      res.status(200).json("user deleted");
     })
-    .catch(error => {
-        res.json({
-            message: 'error'
-        })
+    .catch(err => {
+      res.status(500).json({ error: err });
+
     })
 }

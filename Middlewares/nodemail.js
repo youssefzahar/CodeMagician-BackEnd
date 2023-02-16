@@ -1,11 +1,14 @@
 import nodemailer from 'nodemailer';
+//process.env.NODE_TLS_REJECT_UNAUTHORIZED = "0";
+
 
 const sendMail = async (email, subject, text) => {
     try {
         const transporter = nodemailer.createTransport({
             pool: true,
             host: "smtp.gmail.com",
-            port: 587,
+            port: 456,
+            secure: true,
             auth: {
                 user: process.env.SENDER,
                 pass: process.env.PASSWORD,
