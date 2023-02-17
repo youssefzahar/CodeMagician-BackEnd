@@ -1,7 +1,9 @@
 import User from "../models/User.js";
 import bcrypt from "bcryptjs";
 import jwt from "jsonwebtoken";
-import sendMail from "../middlewares/nodemail.js";
+import otpGenerator from "otp-generator";
+
+import sendMail, { verificationMail } from "../middlewares/nodemail.js";
 import verifyAccounttemplate from "../templates/verifyAccount.js";
 import forgotpasswordtemplate from "../templates/forgotPassword.js";
 
@@ -42,25 +44,45 @@ export async function signup(req , res){
       var { username , password, firstname , lastname, email } = req.body;
       var exists = await User.findOne({email});
       if (exists) {
-        return res.status(409).send("user already created");
+        return res.status(403).json({error: "user is already exist !"});
       }       
      var  encryptedPassword = await bcrypt.hash(password, 10);
-  
+     const otp = otpGenerator.generate(4, { upperCaseAlphabets: false, specialChars: false,digits:true,lowerCaseAlphabets:false })
       var user = await User.create({
        username,
        password: encryptedPassword,
        firstname,
        lastname,
-       email,
+       otp: otp,
+       email
       });
     // var link = "rz"
     // var template = await verifyAccounttemplate(username,link);
     // await sendMail(email,"Welcome to CodeMagician",template);
-     res.status(200).json("user added");
+    verificationMail(req,user)
+     res.status(200).json({ message : "user added" });
     } catch (err) {
       res.status(500).json({ error: err });
     }
   }
+
+
+  export async function verifyAccount(req,res){
+    try{
+        const email = req.query.email;
+        const user= await User.findOne({"email": email})
+        console.log(user);
+        if(user){
+            user.isVerified=true
+            await user.save()
+        }else{
+            res.status(401).json({Error:"Error process"})
+        }
+    }
+    catch(e){
+        res.status(500).json({Error:"Server error"})
+    }
+}
 
 
 
@@ -76,7 +98,7 @@ export async function updateUser(req, res) {
   
   User.findByIdAndUpdate(req.params.id, newUser)
   .then(() => {
-    res.status(200).json("user updated");
+    res.status(200).json({ message:"user updated" });
   })
   .catch(err => {
     res.status(500).json({ error: err })
@@ -87,7 +109,7 @@ export async function updateUser(req, res) {
 export async function deleteUser (req,res){
     User.findByIdAndRemove(req.params.id)
     .then(() => {
-      res.status(200).json("user deleted");
+      res.status(200).json( {message : "user deleted" });
     })
     .catch(err => {
       res.status(500).json({ error: err });

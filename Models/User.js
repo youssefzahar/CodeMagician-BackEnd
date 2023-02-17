@@ -20,10 +20,10 @@ const userSchema = new Schema(
         password: {
             type: String,
         },
-       /* otp: {
+       otp: {
             type: String,
             required: false,
-          },*/
+          },
         isVerified:{
             type: Boolean,
             default: false
